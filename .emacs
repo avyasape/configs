@@ -1,4 +1,11 @@
-(setq x-alt-keysym 'meta)
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
+(package-initialize)
+
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -12,11 +19,14 @@
  '(default-input-method "latin-1-prefix")
  '(global-font-lock-mode t nil (font-lock))
  '(indent-tabs-mode nil)
+ '(package-selected-packages
+   (quote
+    (iedit helm-projectile magit helm auto-complete-c-headers yasnippet auto-complete)))
  '(query-user-mail-address nil)
  '(show-paren-mode t nil (paren))
  '(tab-width 4)
  '(tool-bar-mode nil)
- '(user-mail-address "avyasape@ibm1.bloomberg.com"))
+ '(user-mail-address "blah@blah.com"))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -24,6 +34,9 @@
  ;; If there is more than one, they won't work right.
  '(default ((t (:inherit nil :stipple nil :background "black" :foreground "white" :inverse-video nil :box nil :strike-through nil :overline nil :underline nil :slant normal :weight normal :height 120 :width normal :foundry "unknown" :family "DejaVu Sans Mono"))))
  '(custom-themed ((((min-colors 88) (class color)) (:background "black" :foreground "white")))))
+(add-to-list 'default-frame-alist
+             '(font . "Monaco-16"))
+(setq ring-bell-function 'ignore)
 
 ;; use gnuserv;one instance of emacs and connect to it via
 ;; gnuclient
@@ -57,21 +70,9 @@
 (global-set-key [(f12)] 'other-frame)
 (global-set-key [(meta f4)] 'delete-frame)
 (global-set-key [(meta g)] 'goto-line)
-(global-set-key [delete] 'delete-char)
 
-;(add-to-list 'load-path "~/.emacs.d")
-(push "~/.emacs.d/blp-emacs" load-path)
-(require 'blp-boiler-plate)
-(require 'blp-conventions)
-(require 'blp-sym)
-(require 'lrl-mode)
-(require 'csc-mode)
-(add-to-list 'auto-mode-alist
-             '("\\.lrl$" . lrl-mode))
-(add-to-list 'auto-mode-alist
-             '("\\.csc2$" . csc-mode))
 ;;F11 to switch from cpp to .h and vice versa
-(global-set-key [(f11)] 'blp-go-to-other-file)
+(global-set-key [(f11)] 'helm-projectile-find-other-file)
 
 (delete-selection-mode 1)
 
@@ -84,6 +85,9 @@
 (global-set-key [(f2)] 'bookmark-jump)
 (global-set-key [(f3)] 'revert-buffer)
 (global-set-key [(f4)] 'read-only-mode)
+
+(global-set-key [home] 'move-beginning-of-line)
+(global-set-key [end] 'move-end-of-line)
 
 (desktop-save-mode 1)
 
@@ -121,21 +125,19 @@
 (put 'downcase-region 'disabled nil)
 (defun test-program ()
   "Create a new tiny program suitable for testing some C++ stuff,
-and arrange for M-x compile to be ready to compile and run it
-using Bloomberg's fine pcomp system."
+and arrange for M-x compile to be ready to compile and run it"
   (interactive)
   (let* ((base-name (format "%s_test_%s" 
                             (user-login-name)
                             (format-time-string "%Y%m%d_%H%M%S")))
          (cpp-name (concat base-name ".cpp"))
-         (pcomp-architecture (replace-regexp-in-string "\n$" "" (shell-command-to-string "/bb/shared/bin/bbarch")))
-         (program-name (concat base-name "." pcomp-architecture ".tsk")))
+         )
     (find-file (concat "~/tmp/" cpp-name))
     (insert "#include <cassert>
 #include <cstdlib>
 #include <iostream>
 using namespace std;
-using namespace BloombergLP;
+
 // Use M-x compile to build and run me.
 
 int main(int argc, const char **argv)
@@ -147,69 +149,41 @@ int main(int argc, const char **argv)
     (forward-char 4)
     (set-buffer-modified-p nil)
     (set (make-local-variable 'compile-command)
-         (format "pcomp %s && ./%s" cpp-name program-name))))
-
-(defun git-push ()
-  (interactive)
-  (shell-command "gitpush"))
-
-(defun git-pull ()
-  (interactive)
-  (shell-command "git pull -p"))
+         (format "g++ -std=c++1y %s && ./a.out" cpp-name))))
 
 ;; use gdb-many-windows by default
 (setq  gdb-many-windows t )
 
-(setq package-archives '(("" . "/home/avyasape/emacs-packages/")))
-
-(require 'package)
-(package-initialize)
-
-(require 'git)
-;(require 'xcscope)
-
-; Fix iedit bug 
-(define-key global-map (kbd "C-c ;") 'iedit-mode)
+(require 'helm-config)
+(helm-mode 1)
+(projectile-global-mode)
+(setq projectile-completion-system 'helm)
+(helm-projectile-on)
+(global-set-key (kbd "C-x b") 'helm-mini)
+(global-set-key (kbd "M-x") 'helm-M-x)
+(global-set-key (kbd "C-x C-f") 'helm-find-files)
+(setq helm-M-x-fuzzy-match t)
+(global-set-key (kbd "M-y") 'helm-show-kill-ring)
+(global-set-key (kbd "C-x C-r") 'helm-projectile-find-file)
+(global-set-key (kbd "C-x C-a") 'helm-projectile-find-file-in-known-projects)
+(global-set-key (kbd "M-s o") 'helm-occur)
+(global-set-key (kbd "M-s r") 'helm-projectile-grep)
+(add-to-list 'projectile-globally-ignored-files "*.tsk")
+(add-to-list 'projectile-globally-ignored-files "*.d")
+(add-to-list 'projectile-globally-ignored-files "00*")
+(add-to-list 'projectile-globally-ignored-files "*.log")
 
 (require 'auto-complete)
 (require 'auto-complete-config)
 (ac-config-default)
-
 (require 'yasnippet)
 (yas-global-mode 1)
 
-; let's define a function which initializes auto-complete-c-headers and gets called for c/c++ hooks
-(defun my:ac-c-header-init ()
-  (require 'auto-complete-c-headers)
-  (add-to-list 'ac-sources 'ac-source-c-headers)
-  (add-to-list 'achead:include-directories '"/opt/swt/install/gcc-4.3.2/lib/gcc/x86_64-unknown-linux-gnu/4.3.2/include")
-)
-; now let's call this function from c/c++ hooks
-(add-hook 'c++-mode-hook 'my:ac-c-header-init)
-(add-hook 'c-mode-hook 'my:ac-c-header-init)
-
-; turn on Semantic
 (semantic-mode 1)
-; let's define a function which adds semantic as a suggestion backend to auto complete
-; and hook this function to c-mode-common-hook
 (defun my:add-semantic-to-autocomplete() 
   (add-to-list 'ac-sources 'ac-source-semantic)
 )
 (add-hook 'c-mode-common-hook 'my:add-semantic-to-autocomplete)
-
-(global-ede-mode 1)
-
-; create a project for our program.
-(ede-cpp-root-project "ldrv" :file "~/mbig/ldrv/Readme"
-                      :include-path '("~/mbig/ldrv/livelib"))
-
-; turn on automatic reparsing of open buffers in semantic
 (global-semantic-idle-scheduler-mode 1)
-
 (define-key global-map (kbd "C-.") 'semantic-ia-fast-jump)
 (define-key global-map (kbd "<C-return>") 'semantic-ia-show-variants)
-
-(add-to-list 'load-path "~/.emacs.d/helm")
-(require 'helm-config)
-(helm-mode 1)
-(global-set-key (kbd "C-x b") 'helm-mini)
