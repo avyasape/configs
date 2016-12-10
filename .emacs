@@ -101,6 +101,7 @@
 
 
 ;; Hooks into the various editing modes, primarily for source code
+(add-to-list 'auto-mode-alist '("\\.h\\'" . c++-mode))
 (defun my-c-mode-common-hook ()
     (c-add-style "cau"
         '((c-basic-offset . 4)
@@ -171,7 +172,8 @@ int main(int argc, const char **argv)
 (add-to-list 'projectile-globally-ignored-files "*.tsk")
 (add-to-list 'projectile-globally-ignored-files "*.d")
 (add-to-list 'projectile-globally-ignored-files "00*")
-(add-to-list 'projectile-globally-ignored-files "*.log")
+(add-to-list 'projectile-globally-ignored-files "*link*")
+(add-to-list 'projectile-globally-ignored-files "*.log*")
 
 (require 'auto-complete)
 (require 'auto-complete-config)
@@ -187,3 +189,19 @@ int main(int argc, const char **argv)
 (global-semantic-idle-scheduler-mode 1)
 (define-key global-map (kbd "C-.") 'semantic-ia-fast-jump)
 (define-key global-map (kbd "<C-return>") 'semantic-ia-show-variants)
+
+(setq-default mode-line-format
+              '("%e" mode-line-front-space
+                ;; Standard info about the current buffer
+                mode-line-mule-info
+                mode-line-client
+                mode-line-modified
+                mode-line-remote
+                mode-line-frame-identification
+                mode-line-buffer-identification " " mode-line-position
+                ;; Some specific information about the current buffer:
+                " "
+                mode-line-misc-info
+                vc-mode
+                ;; And the modes, which I don't really care for anyway
+                " " mode-line-modes mode-line-end-spaces))
